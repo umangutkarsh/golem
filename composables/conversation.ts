@@ -263,6 +263,7 @@ export const useConversations = () => {
         setConversationTypingStatus(fromConversation.id, true)
 
         let messageList: any[] = getMessageChain(fromConversation.messages, userMessage)
+        /*
         messageList = [
             {
                 role: 'system',
@@ -271,6 +272,7 @@ export const useConversations = () => {
             },
             ...messageList,
         ]
+        */
         messageList = messageList.map(message => ({
             role: message.role,
             content: message.text,
@@ -406,9 +408,9 @@ export const useConversations = () => {
         const lastMessages = conversation.messages.slice(-3)
         const lastMessagesContent = lastMessages.map((message: ChatMessage) => message.text)
         const conversationTitle = await complete(lastMessagesContent.join('\n'), {
-            systemMessage: 'You are a very clever machine that can determine a very short title for a conversation. The user sends you the content of a conversation and you only output a very short title for it, really concise. Title:',
-            temperature: 0,
-            maxTokens: Number(maxTokens),
+           // systemMessage: 'You are a very clever machine that can determine a very short title for a conversation. The user sends you the content of a conversation and you only output a very short title for it, really concise. Title:',
+           // temperature: 0,
+           // maxTokens: Number(maxTokens),
         })
 
         conversation.title = conversationTitle?.replace(/Title\:/g, '').replace(/\"/g, '').trim()
@@ -435,7 +437,7 @@ export const useConversations = () => {
         await Promise.all(conversationList.value.map(
             (conversation: types.Conversation) => limit(() => deleteConversation(conversation.id)),
         ))
-        const newConversation = await createConversation('Untitled Conversation')
+        const newConversation = await createConversation('Untitled Session')
         await switchConversation(newConversation.id)
     }
 

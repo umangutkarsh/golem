@@ -9,24 +9,26 @@ export function useLanguageModel() {
     async function complete(prompt: string, params?: LMCompleteParams) {
         const client = new OpenAIApi(new Configuration({
             apiKey: apiKey.value || '',
+            basePath: "http://localhost:8000/v1",
         }))
 
         const additionalParams = {
             temperature: params?.temperature || 0.8,
             max_tokens: params?.maxTokens || 256,
-            stop: params?.stop,
+    
         }
 
         const response = await client.createChatCompletion({
-            model: 'gpt-3.5-turbo',
-            messages: [{
-                role: 'system',
-                content: params?.systemMessage || 'This is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.',
-            }, {
+            model: 'ollama/llama2',
+  
+            messages: [
+            {
                 role: 'user',
-                content: prompt,
+                content: prompt + " Please end c.",
+            
             }],
-            ...additionalParams,
+          
+            // ...additionalParams,
         })
 
         return response.data.choices[0].message?.content
@@ -34,14 +36,19 @@ export function useLanguageModel() {
 
     async function sendMessage(options: any) {
         const { onProgress, signal, ...requestBody } = options
-        const CHAT_COMPLETION_ENDPOINT = 'https://api.openai.com/v1/chat/completions'
+        const CHAT_COMPLETION_ENDPOINT = 'http://localhost:8000/v1/chat/completions'
 
         const requestOptions: NitroFetchOptions<typeof CHAT_COMPLETION_ENDPOINT> = {
             method: 'POST',
             body: requestBody,
+
             headers: {
-                Authorization: `Bearer ${apiKey.value}`,
-            },
+                Origin: "http://localhost:3000",
+                AcesssControlRequestMethod: "POST"
+            }
+          //  headers: {
+          //      Authorization: `Bearer ${apiKey.value}`,
+          //  },
         }
 
         if (requestBody.stream) {
@@ -82,6 +89,7 @@ export function useLanguageModel() {
             if (response.id) {
                 result.id = response.id
             }
+            console.log(response)
             const message = response.choices[0].message
             if (!message) {
                 throw new Error('No message in response')
@@ -113,12 +121,14 @@ export function useLanguageModel() {
                 if (onProgress) {
                     await onProgress(result)
                 }
+               
             }
             return result
         }
     }
 
     const checkIfAPIKeyIsValid = async (newApiKey: string) => {
+        /*
         const res = await $fetch<any>('https://api.openai.com/v1/engines', {
             headers: {
                 Authorization: `Bearer ${newApiKey || apiKey.value}`,
@@ -127,6 +137,7 @@ export function useLanguageModel() {
         if (res.status === 401) {
             throw new Error('Invalid API key')
         }
+        */
     }
 
     return { complete, sendMessage, checkIfAPIKeyIsValid }

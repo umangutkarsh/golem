@@ -2,8 +2,8 @@
 const { modelUsed } = useSettings()
 
 const options = [
-    { value: 'gpt-3.5-turbo', label: 'GPT 3.5', icon: 'i-tabler-brand-openai' },
-    { value: 'gpt-4', label: 'GPT 4', icon: 'i-tabler-brand-openai' },
+    { value: 'llama2-70b', label: 'Llama-2', icon: 'i-tabler-brand-meta' },
+    { value: 'mistral-7b', label: 'Mistral', icon: 'i-tabler-letter-m' },
 ] as const
 
 function onClick(model: string) {

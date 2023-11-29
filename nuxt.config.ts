@@ -78,7 +78,7 @@ export default defineNuxtConfig({
     },
     runtimeConfig: {
         detaKey: process.env.DETA_PROJECT_KEY,
-        apiKey: process.env.OPENAI_API_KEY,
+        apiKey:  "abc123",  // process.env.OPENAI_API_KEY,
         password: process.env.GOLEM_PASSWORD,
     },
     build: {

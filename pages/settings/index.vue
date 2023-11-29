@@ -1,3 +1,3 @@
 <script lang="ts" setup>
-navigateTo('/settings/api-key')
+navigateTo('/settings/model')
 </script>

@@ -93,8 +93,9 @@ export async function* streamAsyncIterable<T>(stream: ReadableStream<T>) {
         while (true) {
             const { done, value } = await reader.read()
             if (done) {
-                return
+                return Promise.resolve({ done: true });
             }
+           // console.log(value)
             yield value
         }
     }
@@ -113,11 +114,24 @@ export async function* streamOpenAIResponse(stream: ReadableStream) {
 
     const onData = async (chunkDecoded: string) => {
         createParser(async (event) => {
+            console.log(event)
             if (event.type === 'event') {
+                // never called unfortunately
                 if (event.data === '[DONE]') {
+                    console.log("EVENT DONE")
                     addData(undefined)
                     return
                 }
+                /*
+                const evJson = JSON.parse(event.data);
+                if (evJson.choices[0].delta.content === '' ) {
+                    // detect a blank in reply
+                    console.log("EVENT DETERMINED DONE")
+
+                    addData(undefined)
+                    return
+                }
+                */
                 try {
                     const data = JSON.parse(event.data)
                     addData(data)
@@ -138,9 +152,9 @@ export async function* streamOpenAIResponse(stream: ReadableStream) {
 
     while (true) {
         if (queue.length === 0) {
-            await new Promise(resolve => setTimeout(resolve, 50))
-            continue
-        }
+          await new Promise(resolve => setTimeout(resolve, 50))
+          continue
+         }
 
         const nextValue = queue.shift()
         if (nextValue === undefined) {

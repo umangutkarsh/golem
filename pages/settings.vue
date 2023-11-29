@@ -2,21 +2,24 @@
 const { isDetaEnabled } = useDeta()
 
 const settingsPageList = [
-    {
-        name: 'API Key',
-        icon: 'i-tabler-key',
-        path: '/settings/api-key',
-    },
-    {
-        name: 'Appearance',
-        icon: 'i-tabler-palette',
-        path: '/settings/appearance',
-    },
+    
+    //{
+    //    name: 'API Key',
+    //    icon: 'i-tabler-key',
+    //    path: '/settings/api-key',
+    //},
+    //
     {
         name: 'Model',
         icon: 'i-tabler-box-model-2',
         path: '/settings/model',
     },
+    {
+        name: 'Appearance',
+        icon: 'i-tabler-palette',
+        path: '/settings/appearance',
+    }
+   
     // isDetaEnabled.value && {
     //     name: 'Deta',
     //     icon: 'i-tabler-database',

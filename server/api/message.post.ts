@@ -26,9 +26,9 @@ export default defineEventHandler(async (event) => {
     const messageSchema = z.object({
         messages: z.array(z.object({
             content: z.string(),
-            role: z.enum(['user', 'assistant', 'system']),
+            role: z.enum(['user', 'assistant']), // , 'system']),
         })),
-        systemMessage: z.string().optional().default(getDefaultSystemMessage()),
+       // systemMessage: z.string().optional().default(getDefaultSystemMessage()),
         model: z.enum(['gpt-3.5-turbo', 'gpt-4']),
         maxTokens: z.number()
             .min(20)
@@ -108,6 +108,7 @@ export default defineEventHandler(async (event) => {
                 headers: getChatCompletionRequestHeaders(event),
                 body: JSON.stringify(request),
                 onMessage: (data) => {
+                    // console.log(data)
                     if (data === '[DONE]') {
                         result.text = result.text.trim()
                         // End the stream
@@ -138,12 +139,16 @@ export default defineEventHandler(async (event) => {
                         console.log(data)
                     }
                 },
+                
             })
-            // console.log(requestResponse)
+          
+
             return sendStream(event, stream)
         }
         else {
             const res = await openai.createChatCompletion(request)
+            console.log('else....')
+            console.log(res.data)
             if (res.data.id) {
                 result.id = res.data.id
             }

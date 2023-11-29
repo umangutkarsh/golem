@@ -10,7 +10,7 @@ const { isSidebarCompact } = useUI()
 const colorMode = useColorMode()
 
 const onCreateConversation = async () => {
-    const newConversation = await createConversation('Untitled Conversation')
+    const newConversation = await createConversation('Untitled Session')
     await switchConversation(newConversation.id)
 }
 
@@ -55,7 +55,7 @@ function onToggleSearchBar() {
                     secondary icon="i-tabler-plus"
                     @click="onCreateConversation"
                 >
-                    New chat
+                    New session
                 </GoButton>
                 <GoLongPressButton
                     :duration="1500"
@@ -70,7 +70,7 @@ function onToggleSearchBar() {
             <SidebarApiKeyAlert
                 v-if="!apiKey"
                 mt-3 mx-2
-                @click="navigateTo('/settings/api-key')"
+                @click="navigateTo('/settings/model')"
             />
             <div
                 text-color-lighter my-6 text-5 tracking--1px w-full
