@@ -1,134 +1,136 @@
-import { Configuration, OpenAIApi } from 'openai'
-import type { NitroFetchOptions } from 'nitropack'
-import { nanoid } from 'nanoid'
-import { streamOpenAIResponse } from '~~/utils/fetch-sse'
+import { Configuration, OpenAIApi } from 'openai';
+import type { NitroFetchOptions } from 'nitropack';
+import { nanoid } from 'nanoid';
+import { streamOpenAIResponse } from '~~/utils/fetch-sse';
 
 export function useLanguageModel() {
-    const { apiKey } = useSettings()
+	const { apiKey } = useSettings();
 
-    async function complete(prompt: string, params?: LMCompleteParams) {
-        const client = new OpenAIApi(new Configuration({
-            apiKey: apiKey.value || '',
-            basePath: "http://localhost:8000/v1",
-        }))
+	async function complete(prompt: string, params?: LMCompleteParams) {
+		const client = new OpenAIApi(
+			new Configuration({
+				apiKey: apiKey.value || '',
+				basePath: 'http://localhost:11434/api',
+			})
+		);
 
-        const additionalParams = {
-            temperature: params?.temperature || 0.8,
-            max_tokens: params?.maxTokens || 256,
-    
-        }
+		const additionalParams = {
+			temperature: params?.temperature || 0.8,
+			max_tokens: params?.maxTokens || 256,
+		};
 
-        const response = await client.createChatCompletion({
-            model: 'ollama/llama2',
-  
-            messages: [
-            {
-                role: 'user',
-                content: prompt + " Please end c.",
-            
-            }],
-          
-            // ...additionalParams,
-        })
+		const response = await client.createChatCompletion({
+			model: 'ollama/llama2',
 
-        return response.data.choices[0].message?.content
-    }
+			messages: [
+				{
+					role: 'user',
+					content: prompt + ' Please end c.',
+				},
+			],
 
-    async function sendMessage(options: any) {
-        const { onProgress, signal, ...requestBody } = options
-        const CHAT_COMPLETION_ENDPOINT = 'http://localhost:8000/v1/chat/completions'
+			// ...additionalParams,
+		});
 
-        const requestOptions: NitroFetchOptions<typeof CHAT_COMPLETION_ENDPOINT> = {
-            method: 'POST',
-            body: requestBody,
+		return response.data.choices[0].message?.content;
+	}
 
-            headers: {
-                Origin: "http://localhost:3000",
-                AcesssControlRequestMethod: "POST"
-            }
-          //  headers: {
-          //      Authorization: `Bearer ${apiKey.value}`,
-          //  },
-        }
+	async function sendMessage(options: any) {
+		const { onProgress, signal, ...requestBody } = options;
+		const CHAT_COMPLETION_ENDPOINT = 'http://localhost:11434';
 
-        if (requestBody.stream) {
-            requestOptions.responseType = 'stream'
-        }
+		const requestOptions: NitroFetchOptions<typeof CHAT_COMPLETION_ENDPOINT> = {
+			method: 'POST',
+			body: requestBody,
 
-        if (options.signal) {
-            requestOptions.signal = signal
-        }
+			headers: {
+				Origin: 'http://localhost:3000',
+				AcesssControlRequestMethod: 'POST',
+			},
+			//  headers: {
+			//      Authorization: `Bearer ${apiKey.value}`,
+			//  },
+		};
 
-        // TODO: Discover why this is hitting maximum recursion depth on type inference
-        const { data: response, error } = await handle<any>(($fetch as any)(CHAT_COMPLETION_ENDPOINT, requestOptions))
+		if (requestBody.stream) {
+			requestOptions.responseType = 'stream';
+		}
 
-        if (error) {
-            const cause = (error as any)?.response?._data.error
-                ? (error as any)?.response?._data
-                : JSON.parse(
-                    new TextDecoder().decode(
-                        (await ((error as any)?.response?._data as ReadableStream)
-                            .getReader()
-                            .read()
-                        ).value,
-                    ),
-                )
-            throw new OpenAIError({ cause, message: 'Failed to send message' })
-        }
+		if (options.signal) {
+			requestOptions.signal = signal;
+		}
 
-        const result = {
-            role: 'assistant',
-            id: nanoid(),
-            text: '',
-            delta: undefined,
-            detail: undefined,
-            parentMessageId: '',
-        }
+		// TODO: Discover why this is hitting maximum recursion depth on type inference
+		const { data: response, error } = await handle<any>(
+			($fetch as any)(CHAT_COMPLETION_ENDPOINT, requestOptions)
+		);
 
-        if (!requestBody.stream) {
-            if (response.id) {
-                result.id = response.id
-            }
-            console.log(response)
-            const message = response.choices[0].message
-            if (!message) {
-                throw new Error('No message in response')
-            }
-            result.text = message.content
-            if (message.role) {
-                result.role = message.role
-            }
-            result.detail = response as any
-            console.log(result)
-            return result
-        }
-        else {
-            for await (const data of streamOpenAIResponse(response)) {
-                if (data.id) {
-                    result.id = data.id
-                }
-                if (data?.choices?.length) {
-                    const delta = data.choices[0].delta
-                    result.delta = delta.content
-                    if (delta?.content) {
-                        result.text += delta.content
-                    }
-                    result.detail = data
-                    if (delta.role) {
-                        result.role = delta.role
-                    }
-                }
-                if (onProgress) {
-                    await onProgress(result)
-                }
-               
-            }
-            return result
-        }
-    }
+		if (error) {
+			const cause = (error as any)?.response?._data.error
+				? (error as any)?.response?._data
+				: JSON.parse(
+						new TextDecoder().decode(
+							(
+								await ((error as any)?.response?._data as ReadableStream)
+									.getReader()
+									.read()
+							).value
+						)
+				  );
+			throw new OpenAIError({ cause, message: 'Failed to send message' });
+		}
 
-    const checkIfAPIKeyIsValid = async (newApiKey: string) => {
-        /*
+		const result = {
+			role: 'assistant',
+			id: nanoid(),
+			text: '',
+			delta: undefined,
+			detail: undefined,
+			parentMessageId: '',
+		};
+
+		if (!requestBody.stream) {
+			if (response.id) {
+				result.id = response.id;
+			}
+			console.log(response);
+			const message = response.choices[0].message;
+			if (!message) {
+				throw new Error('No message in response');
+			}
+			result.text = message.content;
+			if (message.role) {
+				result.role = message.role;
+			}
+			result.detail = response as any;
+			console.log(result);
+			return result;
+		} else {
+			for await (const data of streamOpenAIResponse(response)) {
+				if (data.id) {
+					result.id = data.id;
+				}
+				if (data?.choices?.length) {
+					const delta = data.choices[0].delta;
+					result.delta = delta.content;
+					if (delta?.content) {
+						result.text += delta.content;
+					}
+					result.detail = data;
+					if (delta.role) {
+						result.role = delta.role;
+					}
+				}
+				if (onProgress) {
+					await onProgress(result);
+				}
+			}
+			return result;
+		}
+	}
+
+	const checkIfAPIKeyIsValid = async (newApiKey: string) => {
+		/*
         const res = await $fetch<any>('https://api.openai.com/v1/engines', {
             headers: {
                 Authorization: `Bearer ${newApiKey || apiKey.value}`,
@@ -138,14 +140,14 @@ export function useLanguageModel() {
             throw new Error('Invalid API key')
         }
         */
-    }
+	};
 
-    return { complete, sendMessage, checkIfAPIKeyIsValid }
+	return { complete, sendMessage, checkIfAPIKeyIsValid };
 }
 
 interface LMCompleteParams {
-    temperature?: number
-    maxTokens?: number
-    stop?: string
-    systemMessage?: string
+	temperature?: number;
+	maxTokens?: number;
+	stop?: string;
+	systemMessage?: string;
 }
